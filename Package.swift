@@ -6,6 +6,7 @@ let package = Package(
     platforms: [
         .macOS(.v13),
         .iOS(.v16),
+        .visionOS(.v2)
     ],
     products: [
         .library(
@@ -19,6 +20,8 @@ let package = Package(
     ],
     dependencies: [],
     targets: [
+        // ESpeakNG can stay as a binaryTarget (local path).
+        // We just won't *depend* on it for visionOS builds.
         .binaryTarget(
             name: "ESpeakNG",
             path: "Sources/FluidAudio/Frameworks/ESpeakNG.xcframework"
@@ -26,7 +29,8 @@ let package = Package(
         .target(
             name: "FluidAudio",
             dependencies: [
-                "ESpeakNG"
+                // ✅ Link ESpeakNG only on iOS/macOS. Excluded on visionOS so Vision Pro builds succeed.
+                .target(name: "ESpeakNG", condition: .when(platforms: [.iOS, .macOS]))
             ],
             path: "Sources/FluidAudio",
             exclude: []

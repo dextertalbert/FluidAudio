@@ -9,44 +9,35 @@ let package = Package(
         .visionOS(.v2)
     ],
     products: [
+        // Library product only (visionOS cannot consume executable products)
         .library(
             name: "FluidAudio",
             targets: ["FluidAudio"]
-        ),
-        .executable(
-            name: "fluidaudio",
-            targets: ["FluidAudioCLI"]
-        ),
+        )
     ],
     dependencies: [],
     targets: [
-        // ESpeakNG can stay as a binaryTarget (local path).
-        // We just won't *depend* on it for visionOS builds.
+        // Keep ESpeakNG as a binary target (local path),
+        // but we'll only link it on iOS/macOS (see conditional dep below).
         .binaryTarget(
             name: "ESpeakNG",
             path: "Sources/FluidAudio/Frameworks/ESpeakNG.xcframework"
         ),
+
+        // Core library. ESpeakNG is NOT linked on visionOS.
         .target(
             name: "FluidAudio",
             dependencies: [
-                // ✅ Link ESpeakNG only on iOS/macOS. Excluded on visionOS so Vision Pro builds succeed.
                 .target(name: "ESpeakNG", condition: .when(platforms: [.iOS, .macOS]))
             ],
             path: "Sources/FluidAudio",
             exclude: []
         ),
-        .executableTarget(
-            name: "FluidAudioCLI",
-            dependencies: ["FluidAudio"],
-            path: "Sources/FluidAudioCLI",
-            exclude: ["README.md"],
-            resources: [
-                .process("Utils/english.json")
-            ]
-        ),
+
+        // Unit tests (safe to keep)
         .testTarget(
             name: "FluidAudioTests",
             dependencies: ["FluidAudio"]
-        ),
+        )
     ]
 )
